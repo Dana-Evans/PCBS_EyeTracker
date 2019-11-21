@@ -29,9 +29,13 @@ while 1:
         elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or event.unicode == 'q':
                         break
+        
+        screen.fill(WHITE)
+        
         mouse_position = pygame.mouse.get_pos()
-        screen.fill((255,255,255))
+        
         pygame.draw.circle(screen, RED, (mouse_position[0],mouse_position[1]), 30, 0)
         pygame.display.flip()
+        
         clock.tick(60)
 pygame.quit() 

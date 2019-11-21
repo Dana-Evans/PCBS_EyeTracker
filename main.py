@@ -44,43 +44,50 @@ def cut_eyebrows(img):
     eyebrow_h = int(height / 4)
     return img[eyebrow_h:height, 0:width]
 
-if __name__=="__main__":
+def blob_process(img, detector, threshold):
+    """ Detect the blob of the eye """
+    gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    retval, img = cv2.threshold(gray_frame, threshold, 255, cv2.THRESH_BINARY)
+    img = cv2.erode(img, None, iterations=2) #1
+    img = cv2.dilate(img, None, iterations=4) #2
+    img = cv2.medianBlur(img, 5) #3
+    keypoints = detector.detect(img)
+    return keypoints
+
+
+def main():
     # First need the classifiers
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
-
-    # Load the image
-    img = cv2.imread("test2.jpg")
-
-    # Transformations of the image
-    gray_picture = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # put the picture in gray scale
-    retval, img_black_and_white = cv2.threshold(gray_picture, 140, 255, cv2.THRESH_BINARY)
-
-    # Detection of face and eyes
-    face = detect_face(img, face_cascade)
-    left_eye, right_eye = detect_eyes(face, eye_cascade)
-
-    left_eye_without_eyebrow = cut_eyebrows(left_eye)
-    right_eye_without_eyebrow = cut_eyebrows(right_eye)
-
-    # Blob detection
+    
+    # Blob detector
     detector_params = cv2.SimpleBlobDetector_Params()
     detector_params.filterByArea = True
     detector_params.maxArea = 1500
-
+    detector_params.filterByConvexity = False
+    detector_params.filterByInertia = False
     detector = cv2.SimpleBlobDetector_create(detector_params)
-
-    # Showing resultss
-    cv2.imshow('pft', left_eye_without_eyebrow)
-    cv2.waitKey(0) # let the window open until a key is pressed
-
-    cv2.imshow('pft', face)
-    cv2.waitKey(0) # let the window open until a key is pressed
-
-    cv2.imshow('pft', left_eye)
-    cv2.waitKey(0) # let the window open until a key is pressed
-
-    cv2.imshow('pft', right_eye)
-    cv2.waitKey(0) # let the window open until a key is pressed
-
-    cv2.destroyAllWindows() 
+    
+    cap = cv2.VideoCapture(0)
+    cv2.namedWindow('jeu')
+    cv2.createTrackbar('threshold', 'jeu', 0, 255, lambda x: 0)
+    
+    while True:
+        ret, frame = cap.read()
+        face_frame = detect_face(frame, face_cascade)
+        if face_frame is not None:
+            eyes = detect_eyes(face_frame, eye_cascade)
+            for eye in eyes:
+                if eye is not None:
+                    threshold = cv2.getTrackbarPos('threshold', 'jeu')
+                    eye = cut_eyebrows(eye)
+                    keypoints = blob_process(eye, detector, threshold)
+                    eye= cv2.drawKeypoints(eye, keypoints, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        cv2.imshow('jeu', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+    
+if __name__=="__main__":
+    main()
