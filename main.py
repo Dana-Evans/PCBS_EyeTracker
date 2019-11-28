@@ -1,8 +1,16 @@
 import cv2
 import numpy as np
+import pygame
 
-HEAD_COLOR  = (255,255,0)
+HEAD_COLOR = (255,255,0)
 EYES_COLOR = ((0,255,255), (255,0,255))
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (127, 127, 127)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
 
 def detect_eyes(img, classifier):
     """ Function that detect the eyes, so only in the first half of the face and return the right vs left eye """
@@ -25,6 +33,7 @@ def detect_eyes(img, classifier):
         
     return left_eye, right_eye
 
+
 def detect_face(img, classifier):
     """ Function that detect the biggest face on the image and returns it """
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -38,11 +47,13 @@ def detect_face(img, classifier):
     x,y,w,h = biggest
     return img[y:y + h, x:x + w]
 
+
 def cut_eyebrows(img):
     """ Remove the eyebrows from the eye """
     height, width = img.shape[:2]
     eyebrow_h = int(height / 4)
     return img[eyebrow_h:height, 0:width]
+
 
 def blob_process(img, detector, threshold):
     """ Detect the blob of the eye """
@@ -56,6 +67,15 @@ def blob_process(img, detector, threshold):
 
 
 def main():
+    pygame.init()
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen.fill(WHITE)
+    W, H = pygame.display.Info().current_w, pygame.display.Info().current_h
+    clock = pygame.time.Clock()
+
+    # display the backbuffer
+    pygame.display.flip()
+
     # First need the classifiers
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
@@ -71,23 +91,57 @@ def main():
     cap = cv2.VideoCapture(0)
     cv2.namedWindow('jeu')
     cv2.createTrackbar('threshold', 'jeu', 0, 255, lambda x: 0)
+    cv2.createTrackbar('center', 'jeu', 0, 1, lambda x: 0)
+    center = None
+    dx, dy = 0, 0
     
     while True:
         ret, frame = cap.read()
         face_frame = detect_face(frame, face_cascade)
         if face_frame is not None:
             eyes = detect_eyes(face_frame, eye_cascade)
-            for eye in eyes:
-                if eye is not None:
-                    threshold = cv2.getTrackbarPos('threshold', 'jeu')
-                    eye = cut_eyebrows(eye)
-                    keypoints = blob_process(eye, detector, threshold)
-                    eye= cv2.drawKeypoints(eye, keypoints, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+            eye = eyes[0]
+            # for eye in eyes:
+            if eye is not None:
+                threshold = cv2.getTrackbarPos('threshold', 'jeu')
+                eye = cut_eyebrows(eye)
+                keypoints = blob_process(eye, detector, threshold)
+                if center is None and cv2.getTrackbarPos('center', 'jeu') == 1:
+                    center = keypoints[0].pt
+                elif center is not None:
+                    if keypoints:
+                        dx = keypoints[0].pt[0] - center[0]
+                        dy = keypoints[0].pt[1] - center[1]
+                cv2.drawKeypoints(eye, keypoints, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
         cv2.imshow('jeu', frame)
+
+        # Analysis done pygame part
+
+        screen.fill(WHITE)
+
+        # mouse_position = pygame.mouse.get_pos()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                cap.release()
+                cv2.destroyAllWindows()
+                exit(0)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.unicode == 'q':
+                    cap.release()
+                    cv2.destroyAllWindows()
+                    exit(0)
+
+        if center is not None:
+            pygame.draw.circle(screen, RED, (W//2 + int(dx*10), H//2 + int(dy*10)), 30, 0)
+            pygame.display.flip()
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
-    
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     main()
