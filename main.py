@@ -66,12 +66,21 @@ def blob_process(img, detector, threshold):
     return keypoints
 
 
+def draw_cross(screen, centerx, centery, width, height, crossthickness = 5, color = BLUE):
+    pygame.draw.rect(screen, color,
+                     (centerx - crossthickness // 2, centery - height // 2, crossthickness, height))
+
+    pygame.draw.rect(screen, color,
+                     (centerx - width // 2, centery - crossthickness // 2, width, crossthickness))
+
+
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen.fill(WHITE)
     W, H = pygame.display.Info().current_w, pygame.display.Info().current_h
-    clock = pygame.time.Clock()
 
     # display the backbuffer
     pygame.display.flip()
@@ -91,36 +100,48 @@ def main():
     cap = cv2.VideoCapture(0)
     cv2.namedWindow('jeu')
     cv2.createTrackbar('threshold', 'jeu', 0, 255, lambda x: 0)
-    cv2.createTrackbar('center', 'jeu', 0, 1, lambda x: 0)
-    center = None
-    dx, dy = 0, 0
+    eyes_position = dict()  # Dictionnary to store the eyes positions (top, middle, bottom, right and left)
+
+    step = 0  # Initialization variable (where the user has to look or if the game starts)
+    keys = ['middle', 'top', 'right', 'bottom', 'left']
+    capture_position = [False, False]
     
     while True:
         ret, frame = cap.read()
         face_frame = detect_face(frame, face_cascade)
+
         if face_frame is not None:
-            eyes = detect_eyes(face_frame, eye_cascade)
-            eye = eyes[0]
-            # for eye in eyes:
-            if eye is not None:
-                threshold = cv2.getTrackbarPos('threshold', 'jeu')
-                eye = cut_eyebrows(eye)
-                keypoints = blob_process(eye, detector, threshold)
-                if center is None and cv2.getTrackbarPos('center', 'jeu') == 1:
-                    center = keypoints[0].pt
-                elif center is not None:
-                    if keypoints:
-                        dx = keypoints[0].pt[0] - center[0]
-                        dy = keypoints[0].pt[1] - center[1]
-                cv2.drawKeypoints(eye, keypoints, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+            left_eye, right_eye = detect_eyes(face_frame, eye_cascade)
+            threshold = cv2.getTrackbarPos('threshold', 'jeu')
+
+            if left_eye is not None:
+                left_eye = cut_eyebrows(left_eye)
+                keypoints = blob_process(left_eye, detector, threshold)
+                cv2.drawKeypoints(left_eye, keypoints, left_eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+                if capture_position[0]:
+                    keyname = keys[step - 1]
+                    pos = eyes_position.get(keyname, [])
+                    pos.append(keypoints[0].pt)  # Adding the left eye position
+                    eyes_position[keyname] = pos
+                    capture_position[0] = False
+
+
+            if right_eye is not None:
+                right_eye = cut_eyebrows(right_eye)
+                keypoints = blob_process(right_eye, detector, threshold)
+                cv2.drawKeypoints(right_eye, keypoints, right_eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+                if capture_position[1]:
+                    keyname = keys[step - 1]
+                    pos = eyes_position.get(keyname, [])
+                    pos.append(keypoints[0].pt)  # Adding the left eye position
+                    eyes_position[keyname] = pos
+                    capture_position[1] = False
 
         cv2.imshow('jeu', frame)
 
         # Analysis done pygame part
 
         screen.fill(WHITE)
-
-        # mouse_position = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -131,11 +152,31 @@ def main():
                 if event.key == pygame.K_ESCAPE or event.unicode == 'q':
                     cap.release()
                     cv2.destroyAllWindows()
+                    print(eyes_position)
                     exit(0)
+                if event.key == pygame.K_SPACE:
+                    step += 1
+                    capture_position = [True, True]  # Left eye and right eye positions must be captured
 
-        if center is not None:
-            pygame.draw.circle(screen, RED, (W//2 + int(dx*10), H//2 + int(dy*10)), 30, 0)
-            pygame.display.flip()
+        if not any(capture_position):
+            if step == 0:
+                # Middle cross
+                draw_cross(screen, W // 2, H // 2, 50, 50)
+            elif step == 1:
+                # Top cross
+                draw_cross(screen, W // 2, H // 10, 50, 50)
+            elif step == 2:
+                # Right cross
+                draw_cross(screen, 9 * W // 10, H // 2, 50, 50)
+            elif step == 3:
+                # Bottom cross
+                draw_cross(screen, W // 2, 9 * H // 10, 50, 50)
+            elif step == 4:
+                # Left cross
+                draw_cross(screen, W // 10, H // 2, 50, 50)
+
+        pygame.display.flip()  # Updating screen
+
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
