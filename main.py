@@ -86,8 +86,8 @@ def main():
     pygame.display.flip()
 
     # First need the classifiers
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+    eye_cascade = cv2.CascadeClassifier('data/haarcascade_eye.xml')
     
     # Blob detector
     detector_params = cv2.SimpleBlobDetector_Params()
