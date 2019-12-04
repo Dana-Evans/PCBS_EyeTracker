@@ -1,9 +1,8 @@
 # Projet PCBS : Eye Tracker
 
-The goal of this project is to create a game based on the eye 
-tracking the user allowing him to improve his focus. In fact tracking his eyes allows us to be able to evaluate 
+The goal of this project is to create an eye tracker and a game based it.Eye tracking the user will allow him to improve his focus. In fact tracking his eyes allows us to be able to evaluate 
 how focused he is, and permits him to improve over time whilst playing.
-In the end the game should look like a race, where the user can control a ball with his eyes.
+In the end the game should look like a race, where the user can control a ball with his eyes while trying to avoid being disturbed by some background noise.
 
 [Website](https://dawarriorna.github.io/projetPCBS/) - _In development_
 
