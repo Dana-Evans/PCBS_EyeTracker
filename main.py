@@ -57,6 +57,7 @@ def detect_face(img, classifier):
     :type classifier: cv2.CascadeClassifier
 
     :UC: None
+
     """
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     coords = classifier.detectMultiScale(gray_frame, 1.3, 5)
@@ -76,6 +77,25 @@ def cut_eyebrows(img):
 
     :param img: One eye where you want to remove the eyebrow from the image
     :type img: numpy.ndarray
+    :returns: The image without the eyebrow
+    :rtype: numpy.ndarray
+
+    :examples:
+
+    >>> import cv2
+    >>> from numpy import ndarray
+    >>> img = cv2.imread("data/test.jpeg")
+    >>> res = cut_eyebrows(img)
+    >>> height, width = img.shape[:2]
+    >>> res_height, res_width = res.shape[:2]
+    >>> res_height == 3*height // 4
+    True
+    >>> width == res_width
+    True
+    >>> isinstance(img, ndarray)
+    True
+    >>> isinstance(res, ndarray)
+    True
     """
     height, width = img.shape[:2]
     eyebrow_h = int(height / 4)
@@ -85,6 +105,7 @@ def cut_eyebrows(img):
 def blob_process(img, detector, threshold):
     """
     Detect the blob of the eye
+
     :param img: The eye image without eyebrows
     :type img: numpy.ndarray
     :param detector: The detector object used to find the blob
