@@ -4,7 +4,7 @@ The goal of this project is to create an eye tracker and a game based it.Eye tra
 how focused he is, and permits him to improve over time whilst playing.
 In the end the game should look like a race, where the user can control a ball with his eyes while trying to avoid being disturbed by some background noise.
 
-[Website](https://dawarriorna.github.io/projetPCBS/) - _Generated with sphinx_
+[Website](https://dawarriorna.github.io/PCBS_EyeTracker/) - _Generated with sphinx_
 
 ## Getting Started
 
