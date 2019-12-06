@@ -4,7 +4,7 @@ The goal of this project is to create an eye tracker and a game based it.Eye tra
 how focused he is, and permits him to improve over time whilst playing.
 In the end the game should look like a race, where the user can control a ball with his eyes while trying to avoid being disturbed by some background noise.
 
-[Website](https://dawarriorna.github.io/PCBS_EyeTracker/) - _Generated with sphinx_
+For more information with the documentation please go to the [website](https://dawarriorna.github.io/PCBS_EyeTracker/) _(Generated with sphinx)_
 
 ## Getting Started
 
@@ -32,9 +32,23 @@ Then try to run the `main.py` file, if it runs, press q to exit
 $ python3 main.py # press q to exit the program
 ```
 
-## Running the tests
+## Generating the documentation
 
-### Running the tests with sphinx
+You may want to generate yourself the documentation, as if you change the code it won't be automatically updated.
+
+```shell script
+$ make html # This will produce an output in the folder build/
+```
+
+To open the documentation, open the folder build/html/index.html.
+
+If you wish to clean the documentation you can use the following command:
+
+```shell script
+$ make clean
+```
+
+## Running the tests
 
 You can easily run the test with sphinx like so:
 
