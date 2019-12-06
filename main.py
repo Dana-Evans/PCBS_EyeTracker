@@ -4,6 +4,10 @@ The main program that is used to play the game.
 :author: `Dana Ladon <dana.ladon@ens.fr>`_
 
 :date:  2019, december
+
+.. testsetup:: *
+
+        from main import *
 """
 import cv2
 import numpy as np
@@ -21,13 +25,28 @@ BLUE = (0, 0, 255)
 
 def detect_eyes(img, classifier):
     """
-    Function that detect the eyes, so only in the first half of the face and return the right vs left eye
+    Function that detect the eyes, so only in the first half of the face and return the right vs left eye.
+
     :param img: The image where the eyes should be located
     :type img: numpy.ndarray
     :param classifier: The classifier used to detect the eyes
     :type classifier: cv2.CascadeClassifier
 
     :UC: None
+
+    .. doctest::
+
+        >>> from main import *
+        >>> import cv2
+        >>> from numpy import ndarray
+        >>> img = cv2.imread("data/test.jpeg")
+        >>> face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+        >>> eye_cascade = cv2.CascadeClassifier('data/haarcascade_eye.xml')
+        >>> face = detect_face(img, face_cascade)
+        >>> left_eye, right_eye = detect_eyes(face, eye_cascade)
+        >>> # In this case it is true but might be None also
+        >>> isinstance(left_eye, ndarray) and isinstance(right_eye, ndarray)
+        True
     """
     gray_frames = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     eyes = classifier.detectMultiScale(gray_frames, 1.3, 5)
@@ -49,15 +68,26 @@ def detect_eyes(img, classifier):
 
 def detect_face(img, classifier):
     """
-    Function that detect the biggest face on the image and returns it
+    Function that detect the biggest face on the image and returns it.
 
     :param img: The image where the face should be located
     :type img: numpy.ndarray
     :param classifier: The classifier used to detect the face
     :type classifier: cv2.CascadeClassifier
+    :returns: The image cropped around the face
+    :rtype: numpy.ndarray|None
 
     :UC: None
 
+    .. doctest::
+
+        >>> import cv2
+        >>> from numpy import ndarray
+        >>> img = cv2.imread("data/test.jpeg")
+        >>> face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+        >>> face = detect_face(img, face_cascade)
+        >>> isinstance(face, ndarray)
+        True
     """
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     coords = classifier.detectMultiScale(gray_frame, 1.3, 5)
@@ -73,29 +103,30 @@ def detect_face(img, classifier):
 
 def cut_eyebrows(img):
     """
-    Remove the eyebrows from the eye
+    Remove the eyebrows from the eye.
 
     :param img: One eye where you want to remove the eyebrow from the image
     :type img: numpy.ndarray
     :returns: The image without the eyebrow
     :rtype: numpy.ndarray
 
-    :examples:
+    .. doctest::
 
-    >>> import cv2
-    >>> from numpy import ndarray
-    >>> img = cv2.imread("data/test.jpeg")
-    >>> res = cut_eyebrows(img)
-    >>> height, width = img.shape[:2]
-    >>> res_height, res_width = res.shape[:2]
-    >>> res_height == 3*height // 4
-    True
-    >>> width == res_width
-    True
-    >>> isinstance(img, ndarray)
-    True
-    >>> isinstance(res, ndarray)
-    True
+        >>> from main import *
+        >>> import cv2
+        >>> from numpy import ndarray
+        >>> img = cv2.imread("data/test.jpeg")
+        >>> res = cut_eyebrows(img)
+        >>> height, width = img.shape[:2]
+        >>> res_height, res_width = res.shape[:2]
+        >>> res_height == 3*height // 4
+        True
+        >>> width == res_width
+        True
+        >>> isinstance(img, ndarray)
+        True
+        >>> isinstance(res, ndarray)
+        True
     """
     height, width = img.shape[:2]
     eyebrow_h = int(height / 4)
@@ -104,7 +135,7 @@ def cut_eyebrows(img):
 
 def blob_process(img, detector, threshold):
     """
-    Detect the blob of the eye
+    Detect the blob of the eye.
 
     :param img: The eye image without eyebrows
     :type img: numpy.ndarray
@@ -113,8 +144,33 @@ def blob_process(img, detector, threshold):
     :param threshold: The threshold we use to darken or lighten the black and white image
                       (a threshold of 10, would convert any pixel below 10 to  0 and above 10 to 255)
     :type threshold: int
+    :returns: A list of keypoints or None if not detected
+    :rtype: list|None
 
-    :CU: 0 <= threshold <= 255
+    :UC: 0 <= threshold <= 255
+
+    .. doctest::
+
+        >>> from main import *
+        >>> import cv2
+        >>> from numpy import ndarray
+        >>> detector_params = cv2.SimpleBlobDetector_Params()
+        >>> detector_params.filterByArea = True
+        >>> detector_params.maxArea = 1500
+        >>> detector_params.filterByConvexity = False
+        >>> detector_params.filterByInertia = False
+        >>> detector = cv2.SimpleBlobDetector_create(detector_params)
+        >>> img = cv2.imread("data/test.jpeg")
+        >>> face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+        >>> eye_cascade = cv2.CascadeClassifier('data/haarcascade_eye.xml')
+        >>> face = detect_face(img, face_cascade)
+        >>> left_eye, right_eye = detect_eyes(face, eye_cascade)
+        >>> left_eye = cut_eyebrows(left_eye)
+        >>> keypoints = blob_process(left_eye, detector, 42)
+        >>> isinstance(keypoints, list)
+        True
+        >>> isinstance(keypoints[0], cv2.KeyPoint)
+        True
     """
     assert 0 <= threshold <= 255, f"Threshold is too high({threshold}). It should be between 0 and 255 "
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -144,6 +200,9 @@ def draw_cross(screen, centerx, centery, width, height, crossthickness=5, color=
     :type crossthickness: int
     :param color: A color tuple that contains 3 values between 0 and 255
     :type color: tuple
+
+    :UC: None
+
     """
     pygame.draw.rect(screen, color,
                      (centerx - crossthickness // 2, centery - height // 2, crossthickness, height))
@@ -194,6 +253,7 @@ def main():
             if left_eye is not None:
                 left_eye = cut_eyebrows(left_eye)
                 keypoints = blob_process(left_eye, detector, threshold)
+
                 cv2.drawKeypoints(left_eye, keypoints, left_eye, (0, 0, 255),
                                   cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
                 if capture_position[0]:

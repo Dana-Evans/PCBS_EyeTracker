@@ -4,7 +4,7 @@ The goal of this project is to create an eye tracker and a game based it.Eye tra
 how focused he is, and permits him to improve over time whilst playing.
 In the end the game should look like a race, where the user can control a ball with his eyes while trying to avoid being disturbed by some background noise.
 
-[Website](https://dawarriorna.github.io/projetPCBS/) - _In development_
+[Website](https://dawarriorna.github.io/projetPCBS/) - _Generated with sphinx_
 
 ## Getting Started
 
@@ -34,7 +34,35 @@ $ python3 main.py # press q to exit the program
 
 ## Running the tests
 
-Yet no test have been settled.
+### Running the tests with sphinx
+
+You can easily run the test with sphinx like so:
+
+```shell script
+$ make doctest
+```
+
+If everything went ok you should have the following output :
+```text
+[...]
+Document: main
+--------------
+1 items passed all tests:
+  44 tests in default
+44 tests in 1 items.
+44 passed and 0 failed.
+Test passed.
+
+Doctest summary
+===============
+   44 tests
+    0 failures in tests
+    0 failures in setup code
+    0 failures in cleanup code
+build succeeded.
+[...]
+
+```
 
 ## Built With
 
@@ -42,10 +70,11 @@ Yet no test have been settled.
 * [OpenCV](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_tutorials.html) - A nice module for face and eye detection
 * [Numpy](https://numpy.org/doc/1.17/) - scientific computing with Python
 * [Pygame](https://www.pygame.org/docs/) - The graphical package of python used
+* [Sphinx](http://www.sphinx-doc.org/en/master/) - The module used to generate the documentation
 
 ## Authors
 
-* **Dana Evans--Ladon** - *Founder* - [Dawarriorna](https://github.com/Dawarriorna)
+* **Dana Ladon** - *Founder* - [Dawarriorna](https://github.com/Dawarriorna)
 
 ## License
 
