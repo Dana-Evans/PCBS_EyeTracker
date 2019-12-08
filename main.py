@@ -239,11 +239,19 @@ def main():
     cap = cv2.VideoCapture(0)
     cv2.namedWindow('jeu')
     cv2.createTrackbar('threshold', 'jeu', 0, 255, lambda x: 0)
+
     eyes_position = dict()  # Dictionnary to store the eyes positions (top, middle, bottom, right and left)
 
     step = 0  # Initialization variable (where the user has to look or if the game starts)
     keys = ['middle', 'top', 'right', 'bottom', 'left']
     capture_position = [False, False]
+
+    thresholds = {
+        'top': 0,
+        'bottom': 0,
+        'right': 0,
+        'left': 0
+    }
 
     while True:
         ret, frame = cap.read()
@@ -295,7 +303,7 @@ def main():
                     cv2.destroyAllWindows()
                     print(eyes_position)
                     exit(0)
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and step < 5:
                     step += 1
                     capture_position = [True, True]  # Left eye and right eye positions must be captured
 
@@ -305,16 +313,26 @@ def main():
                 draw_cross(screen, W // 2, H // 2, 50, 50)
             elif step == 1:
                 # Top cross
-                draw_cross(screen, W // 2, H // 10, 50, 50)
+                draw_cross(screen, W // 2, H // 8, 50, 50)
             elif step == 2:
                 # Right cross
-                draw_cross(screen, 9 * W // 10, H // 2, 50, 50)
+                draw_cross(screen, 7 * W // 8, H // 2, 50, 50)
             elif step == 3:
                 # Bottom cross
-                draw_cross(screen, W // 2, 9 * H // 10, 50, 50)
+                draw_cross(screen, W // 2, 7 * H // 8, 50, 50)
             elif step == 4:
                 # Left cross
-                draw_cross(screen, W // 10, H // 2, 50, 50)
+                draw_cross(screen, W // 8, H // 2, 50, 50)
+
+        if step == 5:
+            # All positions have been captured now is type to calculate the thresholds
+            for key in thresholds:
+                if key in ('bottom', 'top'):
+                    # We need the y axis difference
+                    thresholds[key] = eyes_position[key][1] - eyes_position['middle'][1]
+                else:
+                    # We need the x axis difference
+                    thresholds[key] = eyes_position[key][0] - eyes_position['middle'][0]
 
         pygame.display.flip()  # Updating screen
 
