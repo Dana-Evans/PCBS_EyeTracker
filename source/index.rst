@@ -26,8 +26,6 @@ Files tree
    :maxdepth: 2
 
    main
-   camera_capture
-   example_pygame
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^

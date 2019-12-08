@@ -5,9 +5,10 @@ The main program that is used to play the game.
 
 :date:  2019, december
 
-.. testsetup:: *
+.. testsetup::*
 
         from main import *
+
 """
 import cv2
 import numpy as np
@@ -31,6 +32,8 @@ def detect_eyes(img, classifier):
     :type img: numpy.ndarray
     :param classifier: The classifier used to detect the eyes
     :type classifier: cv2.CascadeClassifier
+    :returns: The right eye and the left eye
+    :rtype: numpy.ndarray|None
 
     :UC: None
 

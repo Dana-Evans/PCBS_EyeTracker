@@ -14,7 +14,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 You need to get this on your local machine. For that you can use the following commands
 
-```
+```shell
 $ git clone https://github.com/Dawarriorna/projetPCBS.git
 $ cd projetPCBS
 ```
