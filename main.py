@@ -6,6 +6,7 @@ The main program that is used to play the game.
 :date:  2019, december
 
 """
+import os
 import random
 
 import cv2
@@ -20,6 +21,15 @@ GRAY = (127, 127, 127)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+
+
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+
+    return decorate
 
 
 def detect_eyes(img, classifier):
@@ -208,24 +218,42 @@ def draw_cross(screen, centerx, centery, width, height, crossthickness=5, color=
 
 
 def setup_crosses(step, screen, W, H):
+    """
+    A function to draw cross with position depending on the step.
+
+    :param step: The step, where we are in time
+    :type step: int
+    :param screen: The screen where I have to draw the cross
+    :type screen: pygame.Surface
+    :param W: The width of the screen
+    :type W: int
+    :param H: The height of the screen
+    :type H: int
+    """
     if step == 0:
         # Middle cross
         draw_cross(screen, W // 2, H // 2, 50, 50)
     elif step == 1:
         # Top cross
-        draw_cross(screen, W // 2, H // 8, 50, 50)
+        draw_cross(screen, W // 2, H // 5, 50, 50)
     elif step == 2:
         # Right cross
-        draw_cross(screen, 7 * W // 8, H // 2, 50, 50)
+        draw_cross(screen, 4 * W // 5, H // 2, 50, 50)
     elif step == 3:
         # Bottom cross
-        draw_cross(screen, W // 2, 7 * H // 8, 50, 50)
+        draw_cross(screen, W // 2, 4 * H // 5, 50, 50)
     elif step == 4:
         # Left cross
-        draw_cross(screen, W // 8, H // 2, 50, 50)
+        draw_cross(screen, W // 5, H // 2, 50, 50)
 
 
 def setup_detector():
+    """
+    A function to create and setup a blob detector.
+
+    :return: The simple blob detector set up.
+    :rtype: cv2.SimpleBlobDetector
+    """
     detector_params = cv2.SimpleBlobDetector_Params()
     detector_params.filterByArea = True
     detector_params.maxArea = 1500
@@ -236,8 +264,25 @@ def setup_detector():
 
 def get_new_radius(initial_radius: int, radius: int, thresholds: dict, position: [tuple, tuple],
                    center_position: [tuple, tuple]) -> int:
+    """
+    Return new radius depending on where the user is looking.
+
+    :param initial_radius: The initial radius to return if the user is looking somewhere else than in the center
+    :type initial_radius: int
+    :param radius: The actual radius
+    :type radius: int
+    :param thresholds: All the thresholds for every position, if the dx > threshold the user is not looking in the
+                       center
+    :type thresholds: dict
+    :param position: The position of the eyes
+    :type position: list of tuple of two int
+    :param center_position: The position of the eyes when looking at the center
+    :type center_position: list of tuple of two int
+    :return: The new radius
+    :rtype: int
+    """
     if not all(position):
-        return radius  # Could not capture eyes position
+        return radius
 
     dx_right = position[1][0] - center_position[1][0]
     dx_left = position[0][0] - center_position[0][0]
@@ -256,8 +301,23 @@ def get_new_radius(initial_radius: int, radius: int, thresholds: dict, position:
         return radius - 5
 
 
-def get_values_from_eye(eye, blob_process, detector, threshold, current_eye_position, capture_position, keys, step,
-                        eyes_position, eye_name):
+def get_values_from_eye(eye, detector, threshold, current_eye_position, eye_name):
+    """
+    Return the new values for the current eyes position, if the capture have been done and the eyes position list.
+
+    :param eye: The eye we are focusing on
+    :type eye: pygame.ndarray
+    :param detector: The blob detector we are using
+    :type detector: cv2.SimpleBlobDetector
+    :param threshold: The threshold for the eyes (to convert in black and white only)
+    :type threshold: int
+    :param current_eye_position: The current eye position array to update if necessary
+    :type current_eye_position: list of tuple of 2 ints
+    :param eye_name: the eye name (can be left or right)
+    :type eye_name: str
+    :return: The updated value of the current_eye_position
+    :rtype: list of tuples of 2 ints
+    """
     p = 1 if eye_name == "right" else 0
 
     eye = cut_eyebrows(eye)
@@ -267,31 +327,44 @@ def get_values_from_eye(eye, blob_process, detector, threshold, current_eye_posi
 
     if keypoints:
         current_eye_position[p] = keypoints[0].pt
-    else:
-        current_eye_position[p] = None
 
-    if capture_position[p] and current_eye_position[p] is not None:
-        keyname = keys[step - 1]
+    return current_eye_position
 
-        # Adding the right eye position
-        pos = eyes_position.get(keyname, [None, None])
-        pos[p] = current_eye_position[p]
-        eyes_position[keyname] = pos
 
-        capture_position[p] = False
+@static_vars(shown=[],
+             distractions=[])
+def show_distractions(width, height, screen):
+    """
+    A function to show distractions while the user tries to reduce the center.
 
-    return current_eye_position, capture_position, eyes_position
+    :param screen: The screen where the images are shown
+    :type screen: pygame.Surface
+    :param width: The width of the screen
+    :type width: int
+    :param height: The height of the screen
+    :type height: int
+    """
+    # 6.66% chance of adding a new image each frame ~ 30 * 0.0666 ~= 2 image every second
+    if random.random() < 0.0666:
+        x = int(random.random() * width)
+        y = int(random.random() * height)
+        distraction = random.choice(show_distractions.distractions)
+        show_distractions.shown.append((x, y, distraction))
 
-def show_distraction(shown, distractions, width, height):
-    # 1.7% chance of adding a new image each frame ~ 30 * 0.017 ~= 1 image every 2 seconds
-    if random.random() < 0.017:
-        x = random.random() * width
-        y = random.random() * height
+    if len(show_distractions.shown) > 2:
+        show_distractions.shown.pop(0)
+
+    for x, y, image in show_distractions.shown:
+        screen.blit(image, (x, y))
 
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+    # Load and scale images
+    show_distractions.distractions = [pygame.image.load(os.path.join("data", "cats", "png", filepath)).convert_alpha() for filepath in os.listdir(os.path.join("data", "cats", "png"))]
+    show_distractions.distractions = [pygame.transform.scale(image, (64, 64)) for image in show_distractions.distractions]
 
     clock = pygame.time.Clock()
 
@@ -337,24 +410,38 @@ def main():
             current_eye_position = [None, None]  # Default value
 
             if left_eye is not None:
-                current_eye_position, capture_position, eyes_position = get_values_from_eye(left_eye, blob_process,
-                                                                                            detector,
-                                                                                            threshold,
-                                                                                            current_eye_position,
-                                                                                            capture_position,
-                                                                                            keys,
-                                                                                            step, eyes_position,
-                                                                                            "left")
+                current_eye_position = get_values_from_eye(left_eye,
+                                                           detector,
+                                                           threshold,
+                                                           current_eye_position,
+                                                           "left")
+
+                if capture_position[0] and current_eye_position[0] is not None:
+                    keyname = keys[step - 1]
+
+                    # Adding the right eye position
+                    pos = eyes_position.get(keyname, [None, None])
+                    pos[0] = current_eye_position[0]
+                    eyes_position[keyname] = pos
+
+                    capture_position[0] = False
 
             if right_eye is not None:
-                current_eye_position, capture_position, eyes_position = get_values_from_eye(right_eye, blob_process,
-                                                                                            detector,
-                                                                                            threshold,
-                                                                                            current_eye_position,
-                                                                                            capture_position,
-                                                                                            keys,
-                                                                                            step, eyes_position,
-                                                                                            "right")
+                current_eye_position = get_values_from_eye(right_eye,
+                                                           detector,
+                                                           threshold,
+                                                           current_eye_position,
+                                                           "right")
+
+                if capture_position[1] and current_eye_position[1] is not None:
+                    keyname = keys[step - 1]
+
+                    # Adding the right eye position
+                    pos = eyes_position.get(keyname, [None, None])
+                    pos[1] = current_eye_position[1]
+                    eyes_position[keyname] = pos
+
+                    capture_position[1] = False
 
         cv2.imshow('jeu', frame)
 
@@ -381,25 +468,21 @@ def main():
         if not any(capture_position) and 0 <= step <= 4:
             setup_crosses(step, screen, W, H)
 
-        # Now all crosses have been drawn we can play
-        if step == 6:
-            radius = get_new_radius(initial_radius, radius, thresholds, current_eye_position, eyes_position["middle"])
-            pygame.draw.circle(screen, RED, (W // 2, H // 2), int(radius))
-            pygame.draw.circle(screen, BLACK, (W//2, H//2), 5)
-        elif step == 5 and not any(capture_position):
+        if step == 5 and not any(capture_position):
             # All positions have been captured now is type to calculate the thresholds
             x = 0
             y = 1
             left = 0
             right = 1
-            # For the top threshold I chose the min
-            thresholds['top'] = min(eyes_position['top'][left][y] -
+
+            # For the top threshold I chose the max
+            thresholds['top'] = max(eyes_position['top'][left][y] -
                                     eyes_position['middle'][left][y],
                                     eyes_position['top'][right][y] -
                                     eyes_position['middle'][right][y])
 
-            # Same for bottom but it should be negative so I take the max
-            thresholds['bottom'] = max(eyes_position['bottom'][left][y] -
+            # Same for bottom but it should be positive so I take the min
+            thresholds['bottom'] = min(eyes_position['bottom'][left][y] -
                                        eyes_position['middle'][left][y],
                                        eyes_position['bottom'][right][y] -
                                        eyes_position['middle'][right][y])
@@ -411,8 +494,20 @@ def main():
             thresholds['left'] = eyes_position['left'][left][x] - \
                                  eyes_position['middle'][left][x]
             step += 1
+        elif step == 6:
+            # Thresholds and positions have been captured, last thing is to play !
+            # How long will you take ?
+            radius = get_new_radius(initial_radius, radius, thresholds, current_eye_position, eyes_position["middle"])
 
-        pygame.display.flip()  # Updating screen
+            # Reducing circle
+            pygame.draw.circle(screen, RED, (W // 2, H // 2), int(radius))
+
+            # Center focusing point
+            pygame.draw.circle(screen, BLACK, (W // 2, H // 2), 5)
+
+            show_distractions(W, H, screen)
+
+        pygame.display.flip()  # Updates screen
 
         clock.tick_busy_loop(30)  # Limits framerate to 30 fps
 
