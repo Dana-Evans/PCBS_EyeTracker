@@ -7,7 +7,10 @@ The main program that is used to play the game.
 
 """
 import os
+import pickle
 import random
+import time
+from datetime import datetime, timedelta
 
 import cv2
 import numpy as np
@@ -235,16 +238,16 @@ def setup_crosses(step, screen, W, H):
         draw_cross(screen, W // 2, H // 2, 50, 50)
     elif step == 1:
         # Top cross
-        draw_cross(screen, W // 2, H // 5, 50, 50)
+        draw_cross(screen, W // 2, H // 6, 50, 50)
     elif step == 2:
         # Right cross
-        draw_cross(screen, 4 * W // 5, H // 2, 50, 50)
+        draw_cross(screen, 5 * W // 6, H // 2, 50, 50)
     elif step == 3:
         # Bottom cross
-        draw_cross(screen, W // 2, 4 * H // 5, 50, 50)
+        draw_cross(screen, W // 2, 5 * H // 6, 50, 50)
     elif step == 4:
         # Left cross
-        draw_cross(screen, W // 5, H // 2, 50, 50)
+        draw_cross(screen, W // 6, H // 2, 50, 50)
 
 
 def setup_detector():
@@ -294,11 +297,7 @@ def get_new_radius(initial_radius: int, radius: int, thresholds: dict, position:
             dx_left > thresholds['left']:
         return initial_radius
 
-    if radius < 5:
-        print("Woah user won !")
-        exit(0)
-    else:
-        return radius - 5
+    return radius - 5
 
 
 def get_values_from_eye(eye, detector, threshold, current_eye_position, eye_name):
@@ -359,20 +358,32 @@ def show_distractions(width, height, screen):
 
 
 def main():
+    # Pygame initialization
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-
-    # Load and scale images
-    show_distractions.distractions = [pygame.image.load(os.path.join("data", "cats", "png", filepath)).convert_alpha() for filepath in os.listdir(os.path.join("data", "cats", "png"))]
-    show_distractions.distractions = [pygame.transform.scale(image, (64, 64)) for image in show_distractions.distractions]
-
+    myfont = pygame.font.SysFont('Arial', 30)
     clock = pygame.time.Clock()
 
+    # Load and scale images
+    show_distractions.distractions = [pygame.image.load(os.path.join("data", "cats", "png", filepath)).convert_alpha()
+                                      for filepath in os.listdir(os.path.join("data", "cats", "png"))]
+    show_distractions.distractions = [pygame.transform.scale(image, (64, 64)) for image in
+                                      show_distractions.distractions]
+
+    # Game and display infos
     W, H = pygame.display.Info().current_w, pygame.display.Info().current_h
     initial_radius = min(W, H)
     radius = initial_radius
 
-    # display the backbuffer
+    # Score loading
+    scores = []
+    scores_file_path = os.path.join("data", "scores")
+
+    if os.path.isfile(scores_file_path):
+        with open(scores_file_path, 'rb') as scores_file:
+            scores = pickle.load(scores_file)
+
+    # Display the buffer
     pygame.display.flip()
 
     # First need the classifiers
@@ -382,23 +393,33 @@ def main():
     # Blob detector
     detector = setup_detector()
 
+    # cv2 window setup
     cap = cv2.VideoCapture(0)
     cv2.namedWindow('jeu')
-    cv2.createTrackbar('threshold', 'jeu', 71, 255, lambda x: 0)
+    cv2.createTrackbar('threshold', 'jeu', 71, 255, lambda foo: 0)
+    cv2.createTrackbar('Record score', 'jeu', 1, 1, lambda foo: 0)
 
-    eyes_position = dict()  # Dictionnary to store the eyes positions (top, middle, bottom, right and left)
+    # Variables initialization
+
+    eyes_position = dict()
     current_eye_position = [None, None]
-
-    step = 0  # Initialization variable (where the user has to look or if the game starts)
+    step = 0
     keys = ['middle', 'top', 'right', 'bottom', 'left']
     capture_position = [False, False]
-
     thresholds = {
         'top': 0,
         'bottom': 0,
         'right': 0,
         'left': 0
     }
+
+    text_well_done = None
+    text_best = None
+    text_median = None
+    text_mean = None
+
+    # The time will be initialized once the game is started not before
+    starting_time = 0
 
     while True:
         ret, frame = cap.read()
@@ -493,11 +514,17 @@ def main():
 
             thresholds['left'] = eyes_position['left'][left][x] - \
                                  eyes_position['middle'][left][x]
+
+            starting_time = datetime.now()
+
             step += 1
         elif step == 6:
             # Thresholds and positions have been captured, last thing is to play !
             # How long will you take ?
             radius = get_new_radius(initial_radius, radius, thresholds, current_eye_position, eyes_position["middle"])
+
+            if radius <= 0:
+                step += 1
 
             # Reducing circle
             pygame.draw.circle(screen, RED, (W // 2, H // 2), int(radius))
@@ -506,6 +533,46 @@ def main():
             pygame.draw.circle(screen, BLACK, (W // 2, H // 2), 5)
 
             show_distractions(W, H, screen)
+
+        elif step == 7:
+            # Last step, scoring
+
+            delta = datetime.now() - starting_time
+            # Bit of a hack to get the total time in microseconds
+            delta_time = delta / timedelta(microseconds=1)
+            delta_time = round(delta_time / 1e6, 2)
+            print(f"Wow you won in {delta_time} seconds !")
+
+            record = cv2.getTrackbarPos('Record score', 'jeu')
+
+            if record == 1:
+                scores.append(delta_time)
+
+                with open(scores_file_path, 'wb+') as scores_file:
+                    pickle.dump(scores, scores_file)
+
+            text_well_done = myfont.render(f'Well done ! You have managed to finish in {delta_time} seconds !',
+                                           False, (100, 255, 100))
+
+            if scores:
+                mean = round(sum(scores) / len(scores), 4)
+                median = scores[len(scores) // 2]
+                best = sorted(scores)[0]
+                text_mean = myfont.render(f'The mean is {mean} seconds', False, (0, 255, 0))
+                text_median = myfont.render(f'The median is {median} seconds', False, (0, 255, 0))
+                text_best = myfont.render(f'The best time is {best} seconds', False, (0, 255, 0))
+
+            step += 1
+        elif step == 8:
+
+            if scores:
+                total_height = text_well_done.get_rect().height * 4  # height is the same for all text
+                screen.blit(text_well_done, (W // 2 - text_well_done.get_rect().width // 2, H // 2 - total_height // 2))
+                screen.blit(text_mean, (W // 2 - text_mean.get_rect().width // 2, H // 2 - total_height // 4))
+                screen.blit(text_median, (W // 2 - text_median.get_rect().width // 2, H // 2 + total_height // 4))
+                screen.blit(text_best, (W // 2 - text_best.get_rect().width // 2, H // 2 + total_height // 2))
+            else:
+                screen.blit(text_well_done, (W // 2 - text_well_done.get_rect().width // 2, H // 2))
 
         pygame.display.flip()  # Updates screen
 
