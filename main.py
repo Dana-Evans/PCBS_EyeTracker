@@ -237,16 +237,16 @@ def setup_crosses(step, screen, W, H):
         draw_cross(screen, W // 2, H // 2, 50, 50)
     elif step == 1:
         # Top cross
-        draw_cross(screen, W // 2, H // 8, 50, 50)
+        draw_cross(screen, W // 2, H // 10, 50, 50)
     elif step == 2:
         # Right cross
-        draw_cross(screen, 7 * W // 8, H // 2, 50, 50)
+        draw_cross(screen, 9 * W // 10, H // 2, 50, 50)
     elif step == 3:
         # Bottom cross
-        draw_cross(screen, W // 2, 7 * H // 8, 50, 50)
+        draw_cross(screen, W // 2, 9 * H // 10, 50, 50)
     elif step == 4:
         # Left cross
-        draw_cross(screen, W // 8, H // 2, 50, 50)
+        draw_cross(screen, W // 10, H // 2, 50, 50)
 
 
 def setup_detector():
@@ -286,6 +286,10 @@ def get_new_radius(initial_radius, radius, thresholds, position,
     if not all(position):
         return radius
 
+    fps = 30
+    # It shoud take around 10 sec to totally reduce the circle
+    dr = initial_radius // (10 * fps)
+
     dx_right = position[1][0] - center_position[1][0]
     dx_left = position[0][0] - center_position[0][0]
     # dy_right = position[1][1] - center_position[1][1]
@@ -296,7 +300,7 @@ def get_new_radius(initial_radius, radius, thresholds, position,
             dx_left > thresholds['left']:
         return initial_radius
 
-    return radius - 5
+    return radius - dr
 
 
 def get_values_from_eye(eye, detector, threshold, current_eye_position, eye_name):
