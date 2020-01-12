@@ -39,7 +39,7 @@ To play the game you have to start the main program with the following commmand:
 $ python3 main.py
 ```
 The first screen contains all the instructions about how to play. You can exit the program at any time
-by pressing `escape` or `q`. Enjoy the game !
+by pressing `escape` or `q`. Enjoy the game.
 
 ## Generating the documentation
 
