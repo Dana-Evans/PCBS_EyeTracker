@@ -1,6 +1,6 @@
 # Projet PCBS : Eye Tracker
 
-The goal of this project is to create an eye tracker and a game based on it. In this objective I have a made a game with fairly simple rules. The screen is filled with a red circle. The goal is to look longly enough on the black dot to reduce the radius of the red circle to 0. Some things pop-up to distract the user. The score is based on the time you take to make disappear the red circle.
+The goal of this project is to create an eye tracker and a game based on it. In this objective I have made a game with fairly simple rules. The screen is filled with a red circle. The goal is to look longly enough on the black dot to reduce the radius of the red circle to 0. Some things pop-up to distract the user. The score is based on the time you take to make disappear the red circle.
 
 For more information with the documentation please go to the [website](https://dawarriorna.github.io/PCBS_EyeTracker/) _(Generated from the [readme](README.md))_
 
