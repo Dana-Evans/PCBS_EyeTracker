@@ -32,6 +32,15 @@ Then try to run the `main.py` file, if it runs, press q to exit
 $ python3 main.py # press q to exit the program
 ```
 
+### Usage
+
+To play the game you have to start the main program with the following commmand:
+```shell
+$ python3 main.py
+```
+The first screen contains all the instructions about how to play. You can exit the program at any time
+by pressing `escape` or `q`. Enjoy the game !
+
 ## Generating the documentation
 
 You may want to generate yourself the documentation, as if you change the code it won't be automatically updated.
