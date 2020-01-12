@@ -1,8 +1,6 @@
 # Projet PCBS : Eye Tracker
 
-The goal of this project is to create an eye tracker and a game based it.Eye tracking the user will allow him to improve his focus. In fact tracking his eyes allows us to be able to evaluate 
-how focused he is, and permits him to improve over time whilst playing.
-In the end the game should look like a race, where the user can control a ball with his eyes while trying to avoid being disturbed by some background noise.
+The goal of this project is to create an eye tracker and a game based on it. In this objective I have a made a game with fairly simple rules. The screen is filled with a red circle. The goal is to look longly enough on the black dot to reduce the radius of the red circle to 0. Some things pop-up to distract the user. The score is based on the time you take to make disappear the red circle.
 
 For more information with the documentation please go to the [website](https://dawarriorna.github.io/PCBS_EyeTracker/) _(Generated from the [readme](README.md))_
 
@@ -41,7 +39,7 @@ $ python3 main.py
 The first screen contains all the instructions about how to play. You can exit the program at any time
 by pressing `escape` or `q`. Enjoy the game.
 
-## Generating the documentation
+## Generating the documentation
 
 You may want to generate yourself the documentation, as if you change the code it won't be automatically updated.
 
