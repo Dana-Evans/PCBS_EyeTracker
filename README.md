@@ -62,14 +62,14 @@ If everything went ok you should have the following output :
 Document: main
 --------------
 1 items passed all tests:
-  44 tests in default
-44 tests in 1 items.
-44 passed and 0 failed.
+  33 tests in default
+33 tests in 1 items.
+33 passed and 0 failed.
 Test passed.
 
 Doctest summary
 ===============
-   44 tests
+   33 tests
     0 failures in tests
     0 failures in setup code
     0 failures in cleanup code

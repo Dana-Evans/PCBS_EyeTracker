@@ -9,7 +9,6 @@ The main program that is used to play the game.
 import os
 import pickle
 import random
-import time
 from datetime import datetime, timedelta
 
 import cv2
@@ -238,16 +237,16 @@ def setup_crosses(step, screen, W, H):
         draw_cross(screen, W // 2, H // 2, 50, 50)
     elif step == 1:
         # Top cross
-        draw_cross(screen, W // 2, H // 6, 50, 50)
+        draw_cross(screen, W // 2, H // 8, 50, 50)
     elif step == 2:
         # Right cross
-        draw_cross(screen, 5 * W // 6, H // 2, 50, 50)
+        draw_cross(screen, 7 * W // 8, H // 2, 50, 50)
     elif step == 3:
         # Bottom cross
-        draw_cross(screen, W // 2, 5 * H // 6, 50, 50)
+        draw_cross(screen, W // 2, 7 * H // 8, 50, 50)
     elif step == 4:
         # Left cross
-        draw_cross(screen, W // 6, H // 2, 50, 50)
+        draw_cross(screen, W // 8, H // 2, 50, 50)
 
 
 def setup_detector():
@@ -265,8 +264,8 @@ def setup_detector():
     return cv2.SimpleBlobDetector_create(detector_params)
 
 
-def get_new_radius(initial_radius: int, radius: int, thresholds: dict, position: [tuple, tuple],
-                   center_position: [tuple, tuple]) -> int:
+def get_new_radius(initial_radius, radius, thresholds, position,
+                   center_position):
     """
     Return new radius depending on where the user is looking.
 
@@ -358,11 +357,17 @@ def show_distractions(width, height, screen):
 
 
 def main():
+    """ The main function that is used when the script starts. """
     # Pygame initialization
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     myfont = pygame.font.SysFont('Arial', 30)
+
+    # Clock
     clock = pygame.time.Clock()
+
+    # Before anything shows the information screen
+    information_screen(screen, myfont, clock)
 
     # Load and scale images
     show_distractions.distractions = [pygame.image.load(os.path.join("data", "cats", "png", filepath)).convert_alpha()
@@ -582,6 +587,75 @@ def main():
             break
     cap.release()
     cv2.destroyAllWindows()
+
+
+def information_screen(screen, myfont, clock):
+    """
+    A first screen to show the instructions.
+
+    :param screen: The screen where to write the instructions
+    :type screen: pygame.Suface
+    :param myfont: The font used to write
+    :type myfont: pygame.font.Font
+    :param clock: The clock used to synchronize the framerate
+    :type clock: Clock
+    """
+    W, H = pygame.display.Info().current_w, pygame.display.Info().current_h
+    pygame.display.flip()
+
+    loop = True
+
+    while loop:
+        screen.fill(WHITE)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit(0)
+            elif event.type == pygame.KEYDOWN:
+                if event.unicode == 'q' or event.key == pygame.K_ESCAPE:
+                    exit(0)
+
+                if event.key == pygame.K_SPACE or event.key == pygame.K_KP_ENTER:
+                    loop = False
+
+        # Show screen information
+        info = """
+        Welcome to eye tracker, my PCBS project.
+        This is a game programmed to improve your focusing.
+        How to play :
+            - After this window you will have to adjust the eye tracker such that your eyes are well tracked
+                The first trackbar allows you to adjust the contrast of your room, you should move it around until your 
+                eyes are surrounded with a red circle. If it is too big, reduce it, if it is too small increase it.
+                The second trackbar allows you to chose whether you want to save your score or not, 0 means no and 1 
+                means yes.
+            - Once you have adjusted it, switch with the other window that opened and look at the middle of the blue
+                crosses and press the spacebar. This allows to calibrate the eye tracker with your eye's movement.
+            - After all the five blue crosses have been checked you will have to focus on the black point in the middle
+                of the red circle. Your goal is to keep focused on it. Everytime you look somewhere else the circle will
+                return to its original radius. Your goal is to make it disappear.
+        To go to the next window press the space bar !
+        """
+
+        infos = info.split("\n")
+
+        total_height = 0
+        text_info = []
+        for text in infos:
+            tmp = myfont.render(text, False, (10, 36, 200))
+            total_height += tmp.get_rect().height
+            text_info.append(tmp)
+
+        n = len(text_info)
+        total_height += 10 * n  # Adding ten spacing between lines
+
+        for i in range(n):
+            text = text_info[i]
+            centered = i - n // 2
+            screen.blit(text, (100, H // 2 + centered * total_height // n))
+
+        pygame.display.flip()  # Updates screen
+
+        clock.tick_busy_loop(30)  # Limits framerate to 30 fps
 
 
 if __name__ == "__main__":
