@@ -93,6 +93,26 @@ build succeeded.
 * [Pygame](https://www.pygame.org/docs/) - The graphical package of python used
 * [Sphinx](http://www.sphinx-doc.org/en/master/) - The module used to generate the documentation
 
+## Conclusion ~ To do next
+
+I'm quite satisfied with what I have done. This project takes a lot of time especially the EyeTracker part with eye detection and doing the right threshold. Here are some improvement points that I could have made with more time:
+
+* A better interface
+* A more precise EyeTracker
+* Different levels of difficulties
+
+### Previous coding experience
+
+I'm coming from a L2 in mathematics, computer science, and cognitive science. So I already used python to do some projects.
+
+### What I learned
+
+I had never used OpenCV nor an EyeTracker.It is new also for me to do a code which is using image analysis. I think that this experience will be helpful in my future career.
+
+### Improvement points for the course
+
+The structure of the course is great. Indeed we saw a large range of python possibilities but it is a little bit frustrating to review all of the "basic" stuff. It could be great to do "skill groups".
+
 ## Authors
 
 * **Dana Ladon** - *Founder* - [Dawarriorna](https://github.com/Dawarriorna)
