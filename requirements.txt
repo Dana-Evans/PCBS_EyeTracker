@@ -8,7 +8,7 @@ idna==2.8
 imagesize==1.2.0
 Jinja2==2.10.3
 MarkupSafe==1.1.1
-numpy==1.17.3
+numpy==1.22.0
 opencv-python==4.1.2.30
 packaging==20.0
 pbr==5.4.4
